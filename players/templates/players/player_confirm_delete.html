@@ -1,0 +1,14 @@
+{% extends 'players/base.html' %}
+{% block content %}
+<div class="text-center py-5">
+    <h2 class="text-danger mb-3">Confirm Deletion</h2>
+    <p class="lead">Are you absolutely sure you want to remove <strong>"{{ object.name }}"</strong> from the roster?</p>
+    <p class="text-muted small">This action cannot be undone.</p>
+    
+    <form method="post" class="mt-4">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger px-4">Yes, Delete Player</button>
+        <a href="{% url 'player_list' %}" class="btn btn-secondary px-4 ms-2">Cancel</a>
+    </form>
+</div>
+{% endblock %}

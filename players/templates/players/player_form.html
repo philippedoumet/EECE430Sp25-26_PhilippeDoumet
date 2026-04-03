@@ -1,0 +1,12 @@
+{% extends 'players/base.html' %}
+{% block content %}
+<h2 class="mb-4 text-primary">{% if object %}Edit{% else %}Add{% endif %} Player</h2>
+<form method="post" class="needs-validation">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <div class="mt-4 pt-3 border-top">
+        <button type="submit" class="btn btn-primary px-4">Save Player</button>
+        <a href="{% url 'player_list' %}" class="btn btn-light ms-2">Cancel</a>
+    </div>
+</form>
+{% endblock %}
