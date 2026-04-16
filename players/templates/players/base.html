@@ -1,29 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Volley Players</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        /* Automatically style Django's default form outputs */
-        form input, form select, form textarea {
-            display: block; width: 100%; padding: .375rem .75rem;
-            font-size: 1rem; border: 1px solid #ced4da;
-            border-radius: .375rem; margin-bottom: 1rem;
-        }
-        form label { font-weight: bold; margin-bottom: .25rem; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Volley Manager{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    .sidebar { width: 240px; min-width: 240px; min-height: 100vh; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+    .sidebar .nav-link { border-radius: 6px; margin-bottom: 2px; color: rgba(255,255,255,.75); transition: all .2s; }
+    .sidebar .nav-link:hover, .sidebar .nav-link.active { color: #fff; background: rgba(255,255,255,.15); }
+    .sidebar .nav-link i { width: 20px; }
+    .section-label { font-size:.68rem; letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.4); padding:.75rem 1rem .25rem; }
+    .stat-card { border: none; border-radius: 12px; }
+    .main-content { flex: 1; background: #f4f6fb; min-height: 100vh; }
+    .badge-result-win { background:#198754; }
+    .badge-result-loss { background:#dc3545; }
+    .badge-result-draw { background:#ffc107; color:#000; }
+    .badge-result-upcoming { background:#6c757d; }
+  </style>
+  {% block extra_head %}{% endblock %}
 </head>
-<body class="bg-light">
-    <nav class="navbar navbar-dark bg-dark mb-4 shadow-sm">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'player_list' %}">🏐 Volley Manager</a>
-        </div>
-    </nav>
-    <div class="container">
-        <div class="card shadow-sm p-4 border-0">
-            {% block content %}{% endblock %}
-        </div>
-    </div>
+<body>
+{% block body %}{% endblock %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

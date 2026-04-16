@@ -1,0 +1,75 @@
+{% extends 'players/coach/base.html' %}
+{% block title %}Match vs {{ match.opponent }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-4">
+  <div>
+    <h3 class="fw-bold mb-1">vs {{ match.opponent }}</h3>
+    <small class="text-muted">{{ match.date|date:"F d, Y · H:i" }} · {{ match.get_venue_display }} · {{ match.get_match_type_display }}</small>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{% url 'match_attendance' match.pk %}" class="btn btn-outline-primary btn-sm">Manage Attendance</a>
+    <a href="{% url 'match_stats' match.pk %}" class="btn btn-outline-warning btn-sm">Enter Stats</a>
+    <a href="{% url 'match_update' match.pk %}" class="btn btn-outline-secondary btn-sm">Edit</a>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-auto"><div class="card stat-card shadow-sm px-4 py-3 text-center"><div class="fs-3 fw-bold">{{ match.score }}</div><div class="small text-muted">Sets Score</div></div></div>
+  <div class="col-auto"><div class="card stat-card shadow-sm px-4 py-3 text-center"><div class="fs-3 fw-bold"><span class="badge badge-result-{{ match.result|lower }} fs-6">{{ match.result }}</span></div><div class="small text-muted">Result</div></div></div>
+  <div class="col-auto"><div class="card stat-card shadow-sm px-4 py-3 text-center"><div class="fs-3 fw-bold">{{ attendances.count }}</div><div class="small text-muted">Attendance Records</div></div></div>
+</div>
+
+{% if match.notes %}<div class="alert alert-light border mb-4"><i class="fas fa-sticky-note me-2"></i>{{ match.notes }}</div>{% endif %}
+
+<div class="row g-3">
+  <!-- Attendance -->
+  <div class="col-lg-5">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-white fw-semibold d-flex justify-content-between">
+        Attendance
+        <a href="{% url 'match_attendance' match.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+          <tbody>
+            {% for a in attendances %}
+            <tr>
+              <td class="ps-3">{{ a.player.name }}</td>
+              <td><span class="badge bg-{{ a.badge_color }}">{{ a.get_status_display }}</span></td>
+              <td class="text-muted small">{{ a.reason }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" class="text-center text-muted py-3">No attendance recorded.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="col-lg-7">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-white fw-semibold d-flex justify-content-between">
+        Player Statistics
+        <a href="{% url 'match_stats' match.pk %}" class="btn btn-sm btn-outline-warning">Edit</a>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+          <thead class="table-light"><tr><th class="ps-3">Player</th><th>Pts</th><th>Kills</th><th>Aces</th><th>Blocks</th><th>Digs</th></tr></thead>
+          <tbody>
+            {% for s in statistics %}
+            <tr>
+              <td class="ps-3 fw-semibold">{{ s.player.name }}</td>
+              <td>{{ s.points }}</td><td>{{ s.kills }}</td><td>{{ s.aces }}</td><td>{{ s.blocks }}</td><td>{{ s.digs }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="text-center text-muted py-3">No stats entered.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

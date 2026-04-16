@@ -1,0 +1,116 @@
+{% extends 'players/coach/base.html' %}
+{% block title %}Coach Dashboard{% endblock %}
+{% block content %}
+<div class="mb-4">
+  <h3 class="fw-bold mb-0">Coach Dashboard</h3>
+  <small class="text-muted">{% if season %}Season: <strong>{{ season }}</strong>{% else %}<span class="text-warning">No active season — ask your club owner to create one.</span>{% endif %}</small>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-xl-3">
+    <div class="card stat-card shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="rounded-3 p-3" style="background:#e8f5e9;"><i class="fas fa-users fa-lg text-success"></i></div>
+        <div><div class="fs-4 fw-bold">{{ player_count }}</div><div class="text-muted small">Active Players</div></div>
+      </div>
+    </div>
+  </div>
+  {% if season %}
+  <div class="col-sm-6 col-xl-3">
+    <div class="card stat-card shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="rounded-3 p-3" style="background:#e3f2fd;"><i class="fas fa-trophy fa-lg text-primary"></i></div>
+        <div><div class="fs-4 fw-bold">{{ wins }}W / {{ losses }}L</div><div class="text-muted small">Season Record</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="card stat-card shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="rounded-3 p-3" style="background:#fff3e0;"><i class="fas fa-calendar-check fa-lg text-warning"></i></div>
+        <div><div class="fs-4 fw-bold">{{ upcoming_matches.count }}</div><div class="text-muted small">Upcoming Matches</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="card stat-card shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="rounded-3 p-3" style="background:#fce4ec;"><i class="fas fa-dumbbell fa-lg text-danger"></i></div>
+        <div><div class="fs-4 fw-bold">{{ upcoming_trainings.count }}</div><div class="text-muted small">Upcoming Trainings</div></div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<div class="row g-3">
+  {% if upcoming_matches %}
+  <div class="col-lg-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-white fw-semibold d-flex justify-content-between">
+        <span><i class="fas fa-trophy me-2 text-warning"></i>Upcoming Matches</span>
+        <a href="{% url 'match_list' %}" class="btn btn-sm btn-outline-warning">All Matches</a>
+      </div>
+      <div class="list-group list-group-flush">
+        {% for m in upcoming_matches %}
+        <a href="{% url 'match_detail' m.pk %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+          <div>
+            <div class="fw-semibold">vs {{ m.opponent }}</div>
+            <small class="text-muted">{{ m.date|date:"M d, Y H:i" }} · {{ m.get_venue_display }} · {{ m.get_match_type_display }}</small>
+          </div>
+          <i class="fas fa-chevron-right text-muted"></i>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if upcoming_trainings %}
+  <div class="col-lg-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-white fw-semibold d-flex justify-content-between">
+        <span><i class="fas fa-dumbbell me-2 text-danger"></i>Upcoming Trainings</span>
+        <a href="{% url 'training_list' %}" class="btn btn-sm btn-outline-danger">All Trainings</a>
+      </div>
+      <div class="list-group list-group-flush">
+        {% for t in upcoming_trainings %}
+        <div class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <div class="fw-semibold">{{ t.location }}</div>
+            <small class="text-muted">{{ t.date|date:"M d, Y H:i" }}</small>
+            {% if t.description %}<div class="small text-muted">{{ t.description|truncatechars:60 }}</div>{% endif %}
+          </div>
+          <a href="{% url 'training_attendance' t.pk %}" class="btn btn-sm btn-outline-secondary">Attendance</a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if recent_results %}
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white fw-semibold"><i class="fas fa-history me-2 text-secondary"></i>Recent Results</div>
+      <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+          <thead class="table-light"><tr><th class="ps-3">Date</th><th>Opponent</th><th>Venue</th><th>Score</th><th>Result</th></tr></thead>
+          <tbody>
+            {% for m in recent_results %}
+            <tr>
+              <td class="ps-3">{{ m.date|date:"M d, Y" }}</td>
+              <td class="fw-semibold">{{ m.opponent }}</td>
+              <td>{{ m.get_venue_display }}</td>
+              <td>{{ m.score }}</td>
+              <td><span class="badge badge-result-{{ m.result|lower }}">{{ m.result }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

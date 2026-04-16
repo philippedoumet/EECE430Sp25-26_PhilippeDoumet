@@ -1,0 +1,43 @@
+{% extends 'players/coach/base.html' %}
+{% block title %}Matches{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h3 class="fw-bold mb-0"><i class="fas fa-trophy me-2 text-warning"></i>Matches{% if season %} — {{ season }}{% endif %}</h3>
+  <div class="d-flex gap-2">
+    <form method="get">
+      <select name="season" class="form-select form-select-sm" onchange="this.form.submit()">
+        <option value="">Select season</option>
+        {% for s in all_seasons %}<option value="{{ s.pk }}" {% if season and season.pk == s.pk %}selected{% endif %}>{{ s }}</option>{% endfor %}
+      </select>
+    </form>
+    <a href="{% url 'match_create' %}" class="btn btn-warning btn-sm"><i class="fas fa-plus me-1"></i>Schedule</a>
+  </div>
+</div>
+<div class="card shadow-sm">
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead class="table-dark"><tr><th class="ps-3">Date</th><th>Opponent</th><th>Type</th><th>Venue</th><th>Score</th><th>Result</th><th class="text-center">Actions</th></tr></thead>
+      <tbody>
+        {% for m in matches %}
+        <tr>
+          <td class="ps-3">{{ m.date|date:"M d, Y H:i" }}</td>
+          <td class="fw-semibold">{{ m.opponent }}</td>
+          <td><span class="badge bg-info text-dark">{{ m.get_match_type_display }}</span></td>
+          <td>{{ m.get_venue_display }}</td>
+          <td>{{ m.score }}</td>
+          <td><span class="badge badge-result-{{ m.result|lower }}">{{ m.result }}</span></td>
+          <td class="text-center">
+            <a href="{% url 'match_detail' m.pk %}" class="btn btn-sm btn-outline-secondary">View</a>
+            <a href="{% url 'match_attendance' m.pk %}" class="btn btn-sm btn-outline-primary">Attendance</a>
+            <a href="{% url 'match_update' m.pk %}" class="btn btn-sm btn-outline-warning">Edit</a>
+            <a href="{% url 'match_delete' m.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" class="text-center text-muted py-4">No matches scheduled{% if not season %} — select a season first{% endif %}.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

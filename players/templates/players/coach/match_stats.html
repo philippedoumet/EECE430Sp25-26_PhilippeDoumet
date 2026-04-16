@@ -1,0 +1,44 @@
+{% extends 'players/coach/base.html' %}
+{% block title %}Stats — vs {{ match.opponent }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h3 class="fw-bold mb-1">Player Stats — vs {{ match.opponent }}</h3>
+    <small class="text-muted">{{ match.date|date:"M d, Y" }} · Check players that participated</small>
+  </div>
+  <a href="{% url 'match_detail' match.pk %}" class="btn btn-outline-secondary btn-sm">Back</a>
+</div>
+<div class="card shadow-sm">
+  <div class="card-body">
+    <form method="post">
+      {% csrf_token %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead class="table-dark">
+            <tr><th>Play</th><th>Player</th><th>Points</th><th>Kills</th><th>Aces</th><th>Blocks</th><th>Digs</th><th>Errors</th><th>Mins</th></tr>
+          </thead>
+          <tbody>
+            {% for row in rows %}
+            <tr>
+              <td><input type="checkbox" name="include_{{ row.player.pk }}" class="form-check-input" {% if row.stat %}checked{% endif %}></td>
+              <td class="fw-semibold">{{ row.player.name }} <small class="text-muted">{{ row.player.position }}</small></td>
+              {% for field in "points kills aces blocks digs errors" %}
+              {% endfor %}
+              <td><input type="number" name="points_{{ row.player.pk }}" class="form-control form-control-sm" style="width:70px;" min="0" value="{{ row.stat.points|default:0 }}"></td>
+              <td><input type="number" name="kills_{{ row.player.pk }}" class="form-control form-control-sm" style="width:70px;" min="0" value="{{ row.stat.kills|default:0 }}"></td>
+              <td><input type="number" name="aces_{{ row.player.pk }}" class="form-control form-control-sm" style="width:70px;" min="0" value="{{ row.stat.aces|default:0 }}"></td>
+              <td><input type="number" name="blocks_{{ row.player.pk }}" class="form-control form-control-sm" style="width:70px;" min="0" value="{{ row.stat.blocks|default:0 }}"></td>
+              <td><input type="number" name="digs_{{ row.player.pk }}" class="form-control form-control-sm" style="width:70px;" min="0" value="{{ row.stat.digs|default:0 }}"></td>
+              <td><input type="number" name="errors_{{ row.player.pk }}" class="form-control form-control-sm" style="width:70px;" min="0" value="{{ row.stat.errors|default:0 }}"></td>
+              <td><input type="number" name="minutes_{{ row.player.pk }}" class="form-control form-control-sm" style="width:70px;" min="0" value="{{ row.stat.minutes_played|default:0 }}"></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <button type="submit" class="btn btn-warning">Save Statistics</button>
+      <a href="{% url 'match_detail' match.pk %}" class="btn btn-light ms-2">Cancel</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

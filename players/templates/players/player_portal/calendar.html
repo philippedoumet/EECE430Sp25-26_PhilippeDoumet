@@ -1,0 +1,92 @@
+{% extends 'players/player_portal/base.html' %}
+{% block title %}My Calendar{% endblock %}
+{% block content %}
+<div class="mb-4">
+  <h3 class="fw-bold mb-0"><i class="fas fa-calendar me-2" style="color:#7b2fa8;"></i>My Calendar</h3>
+  <small class="text-muted">Upcoming matches and trainings{% if season %} — {{ season }}{% endif %}</small>
+</div>
+
+<div class="row g-3">
+  <!-- Upcoming Matches -->
+  <div class="col-lg-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-white fw-semibold"><i class="fas fa-trophy me-2 text-warning"></i>Upcoming Matches</div>
+      <div class="list-group list-group-flush">
+        {% for item in upcoming_matches %}
+        <div class="list-group-item">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="fw-semibold">vs {{ item.event.opponent }}</div>
+              <div class="small text-muted">{{ item.event.date|date:"M d, Y H:i" }} · {{ item.event.get_venue_display }} · {{ item.event.get_match_type_display }}</div>
+              {% if item.attendance %}
+              <span class="badge bg-{{ item.attendance.badge_color }} mt-1">{{ item.attendance.get_status_display }}</span>
+              {% if item.attendance.reason %}<small class="text-muted ms-1">{{ item.attendance.reason }}</small>{% endif %}
+              {% endif %}
+            </div>
+            <div>
+              {% if item.event.is_upcoming %}
+              <form method="post" action="{% url 'player_mark_attendance' %}" class="d-flex gap-1">
+                {% csrf_token %}
+                <input type="hidden" name="match_id" value="{{ item.event.pk }}">
+                <input type="hidden" name="status" value="present">
+                <button type="submit" class="btn btn-sm {% if item.attendance and item.attendance.status == 'present' %}btn-success{% else %}btn-outline-success{% endif %}">Present</button>
+              </form>
+              <form method="post" action="{% url 'player_mark_attendance' %}" class="d-flex gap-1 mt-1">
+                {% csrf_token %}
+                <input type="hidden" name="match_id" value="{{ item.event.pk }}">
+                <input type="hidden" name="status" value="absent">
+                <button type="submit" class="btn btn-sm {% if item.attendance and item.attendance.status == 'absent' %}btn-danger{% else %}btn-outline-danger{% endif %}">Absent</button>
+              </form>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% empty %}
+        <div class="list-group-item text-muted text-center py-4">No upcoming matches.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Upcoming Trainings -->
+  <div class="col-lg-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-white fw-semibold"><i class="fas fa-dumbbell me-2 text-danger"></i>Upcoming Trainings</div>
+      <div class="list-group list-group-flush">
+        {% for item in upcoming_trainings %}
+        <div class="list-group-item">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="fw-semibold">{{ item.event.location }}</div>
+              <div class="small text-muted">{{ item.event.date|date:"M d, Y H:i" }}</div>
+              {% if item.event.description %}<div class="small text-muted">{{ item.event.description|truncatechars:60 }}</div>{% endif %}
+              {% if item.attendance %}
+              <span class="badge bg-{{ item.attendance.badge_color }} mt-1">{{ item.attendance.get_status_display }}</span>
+              {% endif %}
+            </div>
+            <div>
+              {% if item.event.is_upcoming %}
+              <form method="post" action="{% url 'player_mark_attendance' %}">
+                {% csrf_token %}
+                <input type="hidden" name="training_id" value="{{ item.event.pk }}">
+                <input type="hidden" name="status" value="present">
+                <button type="submit" class="btn btn-sm {% if item.attendance and item.attendance.status == 'present' %}btn-success{% else %}btn-outline-success{% endif %}">Present</button>
+              </form>
+              <form method="post" action="{% url 'player_mark_attendance' %}" class="mt-1">
+                {% csrf_token %}
+                <input type="hidden" name="training_id" value="{{ item.event.pk }}">
+                <input type="hidden" name="status" value="absent">
+                <button type="submit" class="btn btn-sm {% if item.attendance and item.attendance.status == 'absent' %}btn-danger{% else %}btn-outline-danger{% endif %}">Absent</button>
+              </form>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% empty %}
+        <div class="list-group-item text-muted text-center py-4">No upcoming trainings.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

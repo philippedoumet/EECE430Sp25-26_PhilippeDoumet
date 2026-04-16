@@ -1,0 +1,78 @@
+{% extends 'players/coach/base.html' %}
+{% block title %}{{ player.name }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-4">
+  <div>
+    <h3 class="fw-bold mb-1">{{ player.name }} {% if player.jersey_number %}<span class="badge bg-dark">#{{ player.jersey_number }}</span>{% endif %}</h3>
+    <span class="badge bg-success me-1">{{ player.position }}</span>
+    {% if not player.is_active %}<span class="badge bg-danger">Inactive</span>{% endif %}
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{% url 'coach_player_update' player.pk %}" class="btn btn-outline-primary btn-sm">Edit</a>
+    {% if not has_account %}
+    <a href="{% url 'coach_player_account' player.pk %}" class="btn btn-success btn-sm"><i class="fas fa-key me-1"></i>Create Account</a>
+    {% else %}
+    <span class="btn btn-sm btn-outline-success disabled"><i class="fas fa-check me-1"></i>Account Active</span>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-3">
+  <!-- Player info -->
+  <div class="col-lg-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-white fw-semibold">Player Info</div>
+      <ul class="list-group list-group-flush">
+        <li class="list-group-item d-flex justify-content-between"><span class="text-muted">Salary</span><strong>${{ player.salary|floatformat:0 }}/mo</strong></li>
+        <li class="list-group-item d-flex justify-content-between"><span class="text-muted">Joined</span><strong>{{ player.date_joined }}</strong></li>
+        <li class="list-group-item d-flex justify-content-between"><span class="text-muted">Age</span><strong>{{ player.age|default:"—" }}</strong></li>
+        <li class="list-group-item d-flex justify-content-between"><span class="text-muted">Nationality</span><strong>{{ player.nationality|default:"—" }}</strong></li>
+        <li class="list-group-item d-flex justify-content-between"><span class="text-muted">Height</span><strong>{% if player.height_cm %}{{ player.height_cm }} cm{% else %}—{% endif %}</strong></li>
+        <li class="list-group-item d-flex justify-content-between"><span class="text-muted">Phone</span><strong>{{ player.phone|default:"—" }}</strong></li>
+        <li class="list-group-item d-flex justify-content-between"><span class="text-muted">Contact</span><strong>{{ player.contact_person }}</strong></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Season stats -->
+  {% if season %}
+  <div class="col-lg-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-white fw-semibold">Season Stats ({{ season }})</div>
+      <ul class="list-group list-group-flush">
+        <li class="list-group-item d-flex justify-content-between"><span class="text-muted">Points</span><strong>{{ stats.total_points|default:0 }}</strong></li>
+        <li class="list-group-item d-flex justify-content-between"><span class="text-muted">Kills</span><strong>{{ stats.total_kills|default:0 }}</strong></li>
+        <li class="list-group-item d-flex justify-content-between"><span class="text-muted">Aces</span><strong>{{ stats.total_aces|default:0 }}</strong></li>
+        <li class="list-group-item d-flex justify-content-between"><span class="text-muted">Blocks</span><strong>{{ stats.total_blocks|default:0 }}</strong></li>
+        <li class="list-group-item d-flex justify-content-between"><span class="text-muted">Digs</span><strong>{{ stats.total_digs|default:0 }}</strong></li>
+        <li class="list-group-item d-flex justify-content-between"><span class="text-muted">Attendance</span><strong>{{ attendance_rate }}%</strong></li>
+      </ul>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Recent match stats -->
+  {% if recent_stats %}
+  <div class="col-lg-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-white fw-semibold">Recent Matches</div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+          <thead class="table-light"><tr><th class="ps-3">vs</th><th>Pts</th><th>Kills</th><th>Aces</th></tr></thead>
+          <tbody>
+            {% for s in recent_stats %}
+            <tr>
+              <td class="ps-3">{{ s.match.opponent }}</td>
+              <td>{{ s.points }}</td>
+              <td>{{ s.kills }}</td>
+              <td>{{ s.aces }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

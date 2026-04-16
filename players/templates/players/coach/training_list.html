@@ -1,0 +1,42 @@
+{% extends 'players/coach/base.html' %}
+{% block title %}Trainings{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h3 class="fw-bold mb-0"><i class="fas fa-dumbbell me-2 text-danger"></i>Trainings{% if season %} — {{ season }}{% endif %}</h3>
+  <div class="d-flex gap-2">
+    <form method="get">
+      <select name="season" class="form-select form-select-sm" onchange="this.form.submit()">
+        <option value="">Select season</option>
+        {% for s in all_seasons %}<option value="{{ s.pk }}" {% if season and season.pk == s.pk %}selected{% endif %}>{{ s }}</option>{% endfor %}
+      </select>
+    </form>
+    <a href="{% url 'training_create' %}" class="btn btn-danger btn-sm"><i class="fas fa-plus me-1"></i>Schedule</a>
+  </div>
+</div>
+<div class="card shadow-sm">
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead class="table-dark"><tr><th class="ps-3">Date & Time</th><th>Location</th><th>Description</th><th class="text-center">Actions</th></tr></thead>
+      <tbody>
+        {% for t in trainings %}
+        <tr>
+          <td class="ps-3">
+            {{ t.date|date:"M d, Y H:i" }}
+            {% if t.is_upcoming %}<span class="badge bg-success ms-1">Upcoming</span>{% endif %}
+          </td>
+          <td>{{ t.location }}</td>
+          <td class="text-muted small">{{ t.description|truncatechars:60|default:"—" }}</td>
+          <td class="text-center">
+            <a href="{% url 'training_attendance' t.pk %}" class="btn btn-sm btn-outline-primary">Attendance</a>
+            <a href="{% url 'training_update' t.pk %}" class="btn btn-sm btn-outline-warning">Edit</a>
+            <a href="{% url 'training_delete' t.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="text-center text-muted py-4">No trainings scheduled{% if not season %} — select a season first{% endif %}.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

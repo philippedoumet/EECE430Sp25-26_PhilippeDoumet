@@ -1,0 +1,122 @@
+{% extends 'players/player_portal/base.html' %}
+{% block title %}My Dashboard{% endblock %}
+{% block content %}
+<div class="mb-4">
+  <h3 class="fw-bold mb-0">Welcome, {{ player.name }}</h3>
+  <small class="text-muted"><span class="badge bg-secondary">{{ player.position }}</span>{% if player.jersey_number %} · #{{ player.jersey_number }}{% endif %}{% if season %} · {{ season }}{% endif %}</small>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-xl-3">
+    <div class="card stat-card shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="rounded-3 p-3" style="background:#f3e5f5;"><i class="fas fa-star fa-lg" style="color:#7b2fa8;"></i></div>
+        <div><div class="fs-4 fw-bold">{{ stats.total_points|default:0 }}</div><div class="text-muted small">Points This Season</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="card stat-card shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="rounded-3 p-3" style="background:#e8f5e9;"><i class="fas fa-hand-rock fa-lg text-success"></i></div>
+        <div><div class="fs-4 fw-bold">{{ stats.total_kills|default:0 }}</div><div class="text-muted small">Kills This Season</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="card stat-card shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="rounded-3 p-3" style="background:#e3f2fd;"><i class="fas fa-clipboard-check fa-lg text-primary"></i></div>
+        <div><div class="fs-4 fw-bold">{{ attendance_rate }}%</div><div class="text-muted small">Attendance Rate</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="card stat-card shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="rounded-3 p-3" style="background:#fff3e0;"><i class="fas fa-shield-alt fa-lg text-warning"></i></div>
+        <div><div class="fs-4 fw-bold">{{ stats.total_blocks|default:0 }}</div><div class="text-muted small">Blocks This Season</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <!-- Next events -->
+  <div class="col-lg-5">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-white fw-semibold"><i class="fas fa-calendar me-2" style="color:#7b2fa8;"></i>Upcoming Events</div>
+      <div class="list-group list-group-flush">
+        {% if next_match %}
+        <div class="list-group-item">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <span class="badge bg-warning text-dark me-2">Match</span>
+              <strong>vs {{ next_match.opponent }}</strong>
+              <div class="small text-muted">{{ next_match.date|date:"M d, Y H:i" }} · {{ next_match.get_venue_display }}</div>
+            </div>
+            <a href="{% url 'player_calendar' %}" class="btn btn-sm btn-outline-secondary">View</a>
+          </div>
+        </div>
+        {% endif %}
+        {% if next_training %}
+        <div class="list-group-item">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <span class="badge bg-danger me-2">Training</span>
+              <strong>{{ next_training.location }}</strong>
+              <div class="small text-muted">{{ next_training.date|date:"M d, Y H:i" }}</div>
+            </div>
+            <a href="{% url 'player_calendar' %}" class="btn btn-sm btn-outline-secondary">View</a>
+          </div>
+        </div>
+        {% endif %}
+        {% if not next_match and not next_training %}
+        <div class="list-group-item text-muted text-center py-3">No upcoming events.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent team results -->
+  {% if recent_results %}
+  <div class="col-lg-7">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-white fw-semibold"><i class="fas fa-history me-2 text-secondary"></i>Recent Team Results</div>
+      <div class="card-body p-0">
+        <table class="table table-sm table-hover mb-0">
+          <thead class="table-light"><tr><th class="ps-3">Date</th><th>Opponent</th><th>Score</th><th>Result</th></tr></thead>
+          <tbody>
+            {% for m in recent_results %}
+            <tr>
+              <td class="ps-3">{{ m.date|date:"M d" }}</td>
+              <td class="fw-semibold">{{ m.opponent }}</td>
+              <td>{{ m.score }}</td>
+              <td><span class="badge badge-result-{{ m.result|lower }}">{{ m.result }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Player profile card -->
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white fw-semibold"><i class="fas fa-user me-2" style="color:#7b2fa8;"></i>My Profile</div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-4"><small class="text-muted">Salary</small><div class="fw-semibold">${{ player.salary|floatformat:0 }}/month</div></div>
+          <div class="col-md-4"><small class="text-muted">Date Joined</small><div class="fw-semibold">{{ player.date_joined }}</div></div>
+          <div class="col-md-4"><small class="text-muted">Contact Person</small><div class="fw-semibold">{{ player.contact_person }}</div></div>
+          {% if player.nationality %}<div class="col-md-4 mt-2"><small class="text-muted">Nationality</small><div class="fw-semibold">{{ player.nationality }}</div></div>{% endif %}
+          {% if player.height_cm %}<div class="col-md-4 mt-2"><small class="text-muted">Height</small><div class="fw-semibold">{{ player.height_cm }} cm</div></div>{% endif %}
+          {% if player.phone %}<div class="col-md-4 mt-2"><small class="text-muted">Phone</small><div class="fw-semibold">{{ player.phone }}</div></div>{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
