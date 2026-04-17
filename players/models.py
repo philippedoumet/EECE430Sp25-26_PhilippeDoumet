@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.utils import timezone
 from django.db.models import Sum, Q
 
@@ -26,6 +26,11 @@ class ClubOwner(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='owner_profile')
     phone = models.CharField(max_length=20, blank=True)
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        group, _ = Group.objects.get_or_create(name='Owner')
+        self.user.groups.add(group)
+
     def __str__(self):
         return f"Owner: {self.user.get_full_name() or self.user.username}"
 
@@ -34,6 +39,11 @@ class Coach(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='coach_profile')
     phone = models.CharField(max_length=20, blank=True)
     specialty = models.CharField(max_length=100, blank=True)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        group, _ = Group.objects.get_or_create(name='Coach')
+        self.user.groups.add(group)
 
     def __str__(self):
         return f"Coach: {self.user.get_full_name() or self.user.username}"
@@ -65,6 +75,13 @@ class Player(models.Model):
 
     class Meta:
         ordering = ['name']
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Auto-assign Player group whenever a user account is linked
+        if self.user_id:
+            group, _ = Group.objects.get_or_create(name='Player')
+            self.user.groups.add(group)
 
     def __str__(self):
         return self.name

@@ -8,44 +8,148 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <style>
     body { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
+
+    /* Role selector tabs */
+    .role-tabs { display: flex; border-radius: .5rem; overflow: hidden; border: 2px solid #dee2e6; margin-bottom: 1.25rem; }
+    .role-tab  { flex: 1; padding: .55rem .25rem; text-align: center; font-size: .82rem;
+                 font-weight: 600; cursor: pointer; background: #f8f9fa; color: #6c757d;
+                 transition: background .15s, color .15s; border: none; outline: none; }
+    .role-tab:not(:last-child) { border-right: 2px solid #dee2e6; }
+    .role-tab.active-owner  { background: linear-gradient(135deg,#0f3460,#533483); color:#fff; }
+    .role-tab.active-coach  { background: linear-gradient(135deg,#134e2a,#1a7a40); color:#fff; }
+    .role-tab.active-player { background: linear-gradient(135deg,#4a1070,#7b2fa8); color:#fff; }
   </style>
 </head>
 <body class="min-vh-100 d-flex align-items-center justify-content-center">
-  <div class="card shadow-lg border-0" style="width:420px;">
-    <div class="card-header text-white text-center py-4 border-0"
+  <div class="card shadow-lg border-0" style="width:440px;">
+
+    <!-- Header -->
+    <div class="card-header text-white text-center py-4 border-0" id="card-header"
          style="background: linear-gradient(135deg,#0f3460,#533483);">
-      <div class="mb-2"><i class="fas fa-volleyball-ball fa-3x text-warning"></i></div>
+      <div class="mb-2">
+        <i class="fas fa-volleyball-ball fa-3x text-warning"></i>
+      </div>
       <h3 class="mb-0 fw-bold">Volley Manager</h3>
-      <small class="opacity-75">Club Management System</small>
+      <small class="opacity-75" id="header-subtitle">Club Management System</small>
     </div>
+
     <div class="card-body p-4">
+
       {% if error %}
-      <div class="alert alert-danger py-2"><i class="fas fa-exclamation-triangle me-2"></i>{{ error }}</div>
+      <div class="alert alert-danger py-2">
+        <i class="fas fa-exclamation-triangle me-2"></i>{{ error }}
+      </div>
       {% endif %}
-      <form method="post">
+
+      <form method="post" id="login-form">
         {% csrf_token %}
+
+        <!-- Role selector -->
+        <label class="form-label fw-semibold mb-2">Sign in as</label>
+        <div class="role-tabs mb-3">
+          <button type="button" class="role-tab active-owner" data-role="owner"
+                  onclick="selectRole('owner')">
+            <i class="fas fa-crown me-1"></i>Owner
+          </button>
+          <button type="button" class="role-tab" data-role="coach"
+                  onclick="selectRole('coach')">
+            <i class="fas fa-whistle me-1"></i>Coach
+          </button>
+          <button type="button" class="role-tab" data-role="player"
+                  onclick="selectRole('player')">
+            <i class="fas fa-running me-1"></i>Player
+          </button>
+        </div>
+        <input type="hidden" name="role" id="role-input" value="{{ selected_role|default:'owner' }}">
+
+        <!-- Username -->
         <div class="mb-3">
           <label class="form-label fw-semibold">Username</label>
           <div class="input-group">
             <span class="input-group-text bg-light"><i class="fas fa-user text-muted"></i></span>
-            <input type="text" name="username" class="form-control" placeholder="Enter your username" required autofocus>
+            <input type="text" name="username" class="form-control"
+                   placeholder="Enter your username"
+                   value="{{ username|default:'' }}" required autofocus>
           </div>
         </div>
+
+        <!-- Password -->
         <div class="mb-4">
           <label class="form-label fw-semibold">Password</label>
           <div class="input-group">
             <span class="input-group-text bg-light"><i class="fas fa-lock text-muted"></i></span>
-            <input type="password" name="password" class="form-control" placeholder="Enter your password" required>
+            <input type="password" name="password" class="form-control"
+                   placeholder="Enter your password" required>
           </div>
         </div>
-        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
-          <i class="fas fa-sign-in-alt me-2"></i>Sign In
+
+        <button type="submit" class="btn w-100 py-2 fw-semibold text-white" id="submit-btn"
+                style="background: linear-gradient(135deg,#0f3460,#533483);">
+          <i class="fas fa-sign-in-alt me-2"></i>Sign In as <span id="btn-role-label">Owner</span>
         </button>
       </form>
     </div>
+
     <div class="card-footer text-center text-muted small py-3 bg-light">
       <i class="fas fa-shield-alt me-1"></i> EECE 430 — Volleyball Club Management
     </div>
   </div>
+
+  <!-- Django Admin shortcut -->
+  <div class="mt-3 text-center">
+    <a href="/admin/" class="text-white-50 small text-decoration-none">
+      <i class="fas fa-cog me-1"></i>Django Admin
+    </a>
+  </div>
+
+  <script>
+    const roles = {
+      owner: {
+        label:    'Owner',
+        gradient: 'linear-gradient(135deg,#0f3460,#533483)',
+        subtitle: 'Club Owner Portal',
+        btnClass: 'active-owner',
+      },
+      coach: {
+        label:    'Coach',
+        gradient: 'linear-gradient(135deg,#134e2a,#1a7a40)',
+        subtitle: 'Coach Portal',
+        btnClass: 'active-coach',
+      },
+      player: {
+        label:    'Player',
+        gradient: 'linear-gradient(135deg,#4a1070,#7b2fa8)',
+        subtitle: 'Player Portal',
+        btnClass: 'active-player',
+      },
+    };
+
+    function selectRole(role) {
+      const cfg = roles[role];
+
+      // Update hidden input
+      document.getElementById('role-input').value = role;
+
+      // Update card header colour
+      document.getElementById('card-header').style.background = cfg.gradient;
+      document.getElementById('header-subtitle').textContent   = cfg.subtitle;
+
+      // Update submit button colour and label
+      document.getElementById('submit-btn').style.background  = cfg.gradient;
+      document.getElementById('btn-role-label').textContent   = cfg.label;
+
+      // Highlight the selected tab, clear others
+      document.querySelectorAll('.role-tab').forEach(tab => {
+        tab.classList.remove('active-owner', 'active-coach', 'active-player');
+      });
+      document.querySelector(`[data-role="${role}"]`).classList.add(cfg.btnClass);
+    }
+
+    // On page load: restore the role that was submitted (so errors keep the selection)
+    (function () {
+      const pre = "{{ selected_role|default:'owner' }}";
+      if (roles[pre]) selectRole(pre);
+    })();
+  </script>
 </body>
 </html>
