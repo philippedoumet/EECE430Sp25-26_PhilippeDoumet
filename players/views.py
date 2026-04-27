@@ -8,6 +8,8 @@ from django.db.models import Sum, F, Q
 from django.utils import timezone
 from django.contrib import messages
 
+from django.conf import settings
+
 from .models import (
     Player, Match, Training, Attendance, PlayerStatistic,
     Transfer, Expense, Season, Coach
@@ -16,6 +18,7 @@ from .forms import (
     PlayerForm, PlayerAccountForm, MatchForm, TrainingForm,
     TransferForm, ExpenseForm, SeasonForm
 )
+from . import league_service
 
 
 # ---------------------------------------------------------------------------
@@ -245,6 +248,13 @@ class CoachDashboardView(CoachRequiredMixin, TemplateView):
             ctx['recent_results'] = played.order_by('-date')[:4]
             ctx['upcoming_trainings'] = Training.objects.filter(
                 season=season, date__gt=timezone.now()).order_by('date')[:3]
+
+        # Live league data
+        ctx['league_name'] = settings.LEAGUE_NAME
+        ctx['our_team_name'] = settings.OUR_TEAM_NAME
+        ctx['league_upcoming'] = league_service.upcoming_for_dashboard(limit=3)
+        ctx['league_recent'] = league_service.recent_results(limit=4, only_ours=True)
+        ctx['form_chips'] = league_service.our_team_form(limit=5)
         return ctx
 
 
@@ -702,4 +712,87 @@ class PlayerMyAttendanceView(PlayerRequiredMixin, TemplateView):
                 player=player, training__season=season
             ).select_related('training').order_by('-training__date')
             ctx['attendance_rate'] = player.attendance_rate(season)
+        return ctx
+
+
+# ---------------------------------------------------------------------------
+# COACH PORTAL — LIVE LEAGUE INTEGRATION (TheSportsDB)
+# ---------------------------------------------------------------------------
+
+def _league_context():
+    return {
+        'league_name': settings.LEAGUE_NAME,
+        'league_season': settings.LEAGUE_SEASON,
+        'our_team_name': settings.OUR_TEAM_NAME,
+    }
+
+
+class LeagueOverviewView(CoachRequiredMixin, TemplateView):
+    template_name = 'players/coach/league_overview.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx.update(_league_context())
+        ctx['info'] = league_service.league_info()
+        ctx['teams'] = league_service.league_teams()
+        ctx['standings'] = league_service.league_standings()[:5]
+        ctx['team_data'] = league_service.our_team_schedule()
+        ctx['next_match'] = ctx['team_data']['next_match']
+        ctx['last_match'] = ctx['team_data']['last_match']
+        ctx['form_chips'] = league_service.our_team_form(limit=5)
+        ctx['recent'] = league_service.recent_results(limit=5)
+        ctx['upcoming'] = league_service.upcoming_fixtures(limit=5)
+        return ctx
+
+
+class LeagueFixturesView(CoachRequiredMixin, TemplateView):
+    template_name = 'players/coach/league_fixtures.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx.update(_league_context())
+        only_ours = self.request.GET.get('mine') == '1'
+        ctx['only_ours'] = only_ours
+        ctx['fixtures'] = league_service.upcoming_fixtures(limit=50, only_ours=only_ours)
+        ctx['next_match'] = league_service.our_team_schedule()['next_match']
+        return ctx
+
+
+class LeagueResultsView(CoachRequiredMixin, TemplateView):
+    template_name = 'players/coach/league_results.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx.update(_league_context())
+        only_ours = self.request.GET.get('mine') == '1'
+        ctx['only_ours'] = only_ours
+        ctx['results'] = league_service.recent_results(limit=60, only_ours=only_ours)
+        return ctx
+
+
+class LeagueStandingsView(CoachRequiredMixin, TemplateView):
+    template_name = 'players/coach/league_standings.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx.update(_league_context())
+        ctx['standings'] = league_service.league_standings()
+        return ctx
+
+
+class LeagueTeamView(CoachRequiredMixin, TemplateView):
+    template_name = 'players/coach/league_team.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx.update(_league_context())
+        team_data = league_service.our_team_schedule()
+        ctx['team_data'] = team_data
+        ctx['form_chips'] = league_service.our_team_form(limit=8)
+        # Find our row in the standings
+        our = next(
+            (r for r in league_service.league_standings() if r['is_ours']),
+            None,
+        )
+        ctx['standings_row'] = our
         return ctx

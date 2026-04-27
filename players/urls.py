@@ -36,6 +36,13 @@ urlpatterns = [
     path('coach/trainings/<int:pk>/attendance/', views.TrainingAttendanceView.as_view(), name='training_attendance'),
     path('coach/stats/', views.CoachSeasonStatsView.as_view(), name='coach_season_stats'),
 
+    # Coach — Live league integration (TheSportsDB)
+    path('coach/league/', views.LeagueOverviewView.as_view(), name='league_overview'),
+    path('coach/league/fixtures/', views.LeagueFixturesView.as_view(), name='league_fixtures'),
+    path('coach/league/results/', views.LeagueResultsView.as_view(), name='league_results'),
+    path('coach/league/standings/', views.LeagueStandingsView.as_view(), name='league_standings'),
+    path('coach/league/team/', views.LeagueTeamView.as_view(), name='league_team'),
+
     # --- Player portal ---
     path('player/', views.PlayerDashboardView.as_view(), name='player_dashboard'),
     path('player/calendar/', views.PlayerCalendarView.as_view(), name='player_calendar'),

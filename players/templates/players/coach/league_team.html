@@ -1,0 +1,119 @@
+{% extends 'players/coach/base.html' %}
+{% block title %}Our League Form{% endblock %}
+{% block content %}
+<div class="mb-4">
+  <h3 class="fw-bold mb-1"><i class="fas fa-shield-alt text-success me-2"></i>{{ our_team_name }} — League Run</h3>
+  <small class="text-muted">{{ league_name }} · Season {{ league_season }}</small>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-lg-3">
+    <div class="card stat-card shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">Played</div>
+        <div class="fs-3 fw-bold">{{ team_data.played|length }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-lg-3">
+    <div class="card stat-card shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">Wins</div>
+        <div class="fs-3 fw-bold text-success">{{ team_data.wins }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-lg-3">
+    <div class="card stat-card shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">Losses</div>
+        <div class="fs-3 fw-bold text-danger">{{ team_data.losses }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-lg-3">
+    <div class="card stat-card shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">Win Rate</div>
+        <div class="fs-3 fw-bold">{{ team_data.win_rate }}%</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if standings_row %}
+<div class="card shadow-sm border-success mb-4">
+  <div class="card-body d-flex justify-content-between flex-wrap gap-3">
+    <div>
+      <span class="badge bg-success mb-1">Regular-season standing</span>
+      <div class="h5 fw-bold mb-0">#{{ standings_row.rank }} · {{ standings_row.points }} points</div>
+      <div class="small text-muted">
+        Played {{ standings_row.played }} ·
+        Sets {{ standings_row.sets_won }}-{{ standings_row.sets_lost }} ·
+        SD {% if standings_row.set_diff > 0 %}+{% endif %}{{ standings_row.set_diff }}
+      </div>
+    </div>
+    {% if form_chips %}
+    <div>
+      <div class="small text-muted mb-1">Recent form (oldest → newest)</div>
+      {% for r in form_chips %}
+        {% if r == 'W' %}<span class="badge bg-success me-1 fs-6">W</span>{% else %}<span class="badge bg-danger me-1 fs-6">L</span>{% endif %}
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white fw-semibold"><i class="fas fa-calendar-alt text-warning me-2"></i>Upcoming</div>
+      <div class="list-group list-group-flush">
+        {% for ev in team_data.upcoming %}
+        <div class="list-group-item">
+          <div class="fw-semibold">{{ ev.home }} <span class="text-muted">vs</span> {{ ev.away }}</div>
+          <div class="small text-muted">
+            {{ ev.date|date:"l, M d" }} · {{ ev.time }}
+            {% if ev.venue %} · {{ ev.venue }}{% endif %}
+            {% if ev.round_label %} · {{ ev.round_label }}{% endif %}
+          </div>
+        </div>
+        {% empty %}
+        <div class="list-group-item text-muted">No upcoming matches.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white fw-semibold"><i class="fas fa-history text-secondary me-2"></i>Played</div>
+      <div class="table-responsive">
+        <table class="table table-sm mb-0">
+          <thead class="table-light"><tr><th class="ps-3">Date</th><th>Match</th><th class="text-end pe-3">Score</th></tr></thead>
+          <tbody>
+            {% for ev in team_data.played reversed %}
+            <tr>
+              <td class="ps-3 small text-muted">{{ ev.date|date:"M d" }}</td>
+              <td>
+                <span class="{% if ev.home == our_team_name %}fw-bold{% endif %}">{{ ev.home }}</span>
+                <span class="text-muted">vs</span>
+                <span class="{% if ev.away == our_team_name %}fw-bold{% endif %}">{{ ev.away }}</span>
+              </td>
+              <td class="text-end pe-3 fw-bold {% if ev.we_won %}text-success{% elif ev.we_lost %}text-danger{% endif %}">
+                {{ ev.score_str }}
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" class="text-muted text-center p-3">Nothing played yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="text-muted small mt-4 mb-0"><i class="fas fa-database me-1"></i>Data source: <a href="https://www.thesportsdb.com/" target="_blank" rel="noopener">TheSportsDB</a> · cached for 30 minutes</p>
+{% endblock %}

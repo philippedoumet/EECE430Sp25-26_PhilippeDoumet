@@ -6,11 +6,13 @@
 
 ## Table of Contents
 
+0. [Demo Credentials](#0-demo-credentials)
 1. [System Overview](#1-system-overview)
 2. [User Roles](#2-user-roles)
 3. [Setup & Authentication Pages](#3-setup--authentication-pages)
 4. [Owner Portal](#4-owner-portal)
 5. [Coach Portal](#5-coach-portal)
+   - 5.X [Live League Integration (TheSportsDB)](#5x-live-league-integration-thesportsdb)
 6. [Player Portal](#6-player-portal)
 7. [Django Admin](#7-django-admin)
 8. [Full URL Reference](#8-full-url-reference)
@@ -18,6 +20,53 @@
 10. [How to Create Users & Assign Roles](#10-how-to-create-users--assign-roles)
 11. [Docker & Deployment](#11-docker--deployment)
 12. [Implemented Features Summary](#12-implemented-features-summary)
+13. [Seeding Demo Data](#13-seeding-demo-data)
+
+---
+
+## 0. Demo Credentials
+
+> All accounts below are created automatically by `python manage.py seed_demo`. The dataset
+> models the SuperLega 2025-26 squad of **Volley Perugia**, the team this club represents in the
+> **Italian Volleyball League**. Real upcoming fixtures and recent results are pulled live from
+> [TheSportsDB](https://www.thesportsdb.com/) for that team and league.
+
+### Admin / Owner
+
+| Username | Password    | Portal       | Role                                            |
+|----------|-------------|--------------|-------------------------------------------------|
+| `owner`  | `Owner@2026`| Owner + `/admin/` | Superuser + ClubOwner profile (Marco Bianchi)   |
+
+### Coaches
+
+| Username | Password    | Portal | Coach name           | Specialty                     |
+|----------|-------------|--------|----------------------|-------------------------------|
+| `coach`  | `Coach@2026`| Coach  | Andrea Lorenzetti    | Head Coach — Attack           |
+| `coach2` | `Coach@2026`| Coach  | Daniele Bagnoli      | Assistant Coach — Defense     |
+
+### Players (14 — full demo roster)
+
+All player accounts share the password **`Player@2026`**.
+
+| Username  | Player name         | Position             | # | Nationality |
+|-----------|---------------------|----------------------|---|-------------|
+| `player01`| Simone Giannelli    | Setter               | 6  | Italy       |
+| `player02`| Wassim Ben Tara     | Opposite Hitter      | 9  | Tunisia     |
+| `player03`| Kamil Semeniuk      | Outside Hitter       | 11 | Poland      |
+| `player04`| Oleh Plotnytskyi    | Outside Hitter       | 17 | Ukraine     |
+| `player05`| Roberto Russo       | Middle Blocker       | 13 | Italy       |
+| `player06`| Sebastian Solé      | Middle Blocker       | 5  | Argentina   |
+| `player07`| Massimo Colaci      | Libero               | 14 | Italy       |
+| `player08`| Jesús Herrera       | Outside Hitter       | 20 | Cuba        |
+| `player09`| Donovan Cvetković   | Opposite Hitter      | 24 | Serbia      |
+| `player10`| Luca Piccinelli     | Setter               | 8  | Italy       |
+| `player11`| Davide Candellaro   | Middle Blocker       | 12 | Italy       |
+| `player12`| Antoine Brizard     | Setter               | 16 | France      |
+| `player13`| Yacine Toumi        | Defensive Specialist | 22 | Algeria     |
+| `player14`| Marco Vitelli       | Libero               | 7  | Italy       |
+
+> Pick any `playerNN` to demo the player portal — `player01` (Giannelli) and `player02` (Ben Tara)
+> have the highest stat totals and look best on the dashboard.
 
 ---
 
@@ -301,6 +350,87 @@ Fields: Season, Date & Time, Location, Description
 
 ---
 
+### 5.X Live League Integration (TheSportsDB)
+
+The coach portal is wired up to a public sports-data API
+([TheSportsDB](https://www.thesportsdb.com/)) and pulls **real fixtures, scores and standings**
+for the league this club competes in.
+
+**League:** Italian Volleyball League (SuperLega) — `idLeague=4544`
+**Season:** 2025-2026
+**Our team:** Volley Perugia — `idTeam=136629`
+
+These constants live in `volley_project/settings.py` (`LEAGUE_ID`, `LEAGUE_NAME`,
+`OUR_TEAM_ID`, `OUR_TEAM_NAME`, `LEAGUE_SEASON`) so they're easy to point at any other
+volleyball league supported by TheSportsDB.
+
+**Implementation files:**
+- `players/league_service.py` — pure-function API client (uses `requests`, file-based
+  caching, throttled to 0.25s/req, with a 6-hour TTL).
+- `players/league_snapshot.json` — offline fallback dataset, used when the API is
+  rate-limited or unreachable. Regenerate with `python manage.py warm_league_cache --save-snapshot`.
+- `players/management/commands/warm_league_cache.py` — fetches all 22 regular-season
+  rounds + the playoff bucket, populates the cache, and (optionally) writes the snapshot.
+
+#### `/coach/league/` — League Overview
+**View:** `LeagueOverviewView` · **Template:** `players/templates/players/coach/league_overview.html`
+
+- League badge, country, full name, season, description (live)
+- Our club's Win/Loss/Win-rate header and recent form chips (W/L)
+- "Next match for us" and "Last result for us" cards
+- Latest league results (any team) and top-5 standings preview
+- Links into the dedicated fixtures / results / standings pages
+
+#### `/coach/league/fixtures/` — Upcoming Fixtures
+**View:** `LeagueFixturesView` · **Template:** `players/templates/players/coach/league_fixtures.html`
+
+- Tabular view of all upcoming fixtures across the league
+- Toggle: **All teams** / **Our team only** (`?mine=1`)
+- Highlights the SuperLega Final games vs Volley Lube
+- Per-fixture: date, time, home/away, venue, round / playoff badge
+
+#### `/coach/league/results/` — League Results
+**View:** `LeagueResultsView` · **Template:** `players/templates/players/coach/league_results.html`
+
+- Played matches across the league with set scores (e.g. 3-1, 3-2)
+- Toggle: **All teams** / **Our team only**
+- Winning team's name and score is highlighted in green per row
+- Our matches are shaded with a coloured background
+
+#### `/coach/league/standings/` — League Standings
+**View:** `LeagueStandingsView` · **Template:** `players/templates/players/coach/league_standings.html`
+
+- Computed locally from the season's regular-season results (rounds 1-22 only)
+- Columns: Rank, Team, P, W, L, Sets Won, Sets Lost, Set Diff, Points
+- Volley Perugia row is highlighted with a shield icon
+- FIVB-style scoring: 3-0/3-1 win = 3 pts; 3-2 win = 2 pts (loser 1 pt); tie-break by set diff
+
+#### `/coach/league/team/` — Our Team
+**View:** `LeagueTeamView` · **Template:** `players/templates/players/coach/league_team.html`
+
+- KPI strip: matches Played / Wins / Losses / Win Rate (live)
+- "Regular-season standing" card (rank, points, set diff)
+- Recent form chips (W/L for last 8 matches)
+- Two-pane layout: full Upcoming list and full Played list, all our matches only
+
+#### Coach Dashboard — live league strip
+
+Below the existing stat cards on `/coach/`, a green panel shows the league name, our club
+name, recent form chips, **upcoming league fixtures (us)**, and **latest league results (us)**
+straight from the API. A button links to the full league overview.
+
+#### Caching, resilience and offline fallback
+
+- Responses are cached on disk under `.cache/league/` for 6 hours, so the API is hit
+  at most a couple of times across an entire demo session.
+- All requests are throttled to 0.25 s apart so the free `key=3` rate limit isn't tripped.
+- If the API ever returns an error or empty response, the service silently falls back
+  to `players/league_snapshot.json` — the user always sees data.
+- To refresh the live data manually: `python manage.py warm_league_cache --clear`.
+- To regenerate the snapshot from current API state: `python manage.py warm_league_cache --save-snapshot`.
+
+---
+
 ## 6. Player Portal
 
 > Accessible to: Users in the `Player` group.
@@ -418,13 +548,18 @@ Use the admin to:
 | `/coach/trainings/<pk>/delete/` | `training_delete` | TrainingDeleteView | Coach |
 | `/coach/trainings/<pk>/attendance/` | `training_attendance` | TrainingAttendanceView | Coach |
 | `/coach/stats/` | `coach_season_stats` | CoachSeasonStatsView | Coach |
+| `/coach/league/` | `league_overview` | LeagueOverviewView | Coach (live) |
+| `/coach/league/fixtures/` | `league_fixtures` | LeagueFixturesView | Coach (live) |
+| `/coach/league/results/` | `league_results` | LeagueResultsView | Coach (live) |
+| `/coach/league/standings/` | `league_standings` | LeagueStandingsView | Coach (live) |
+| `/coach/league/team/` | `league_team` | LeagueTeamView | Coach (live) |
 | `/player/` | `player_dashboard` | PlayerDashboardView | Player |
 | `/player/calendar/` | `player_calendar` | PlayerCalendarView | Player |
 | `/player/attendance/` | `player_attendance` | PlayerMyAttendanceView | Player |
 | `/player/attendance/mark/` | `player_mark_attendance` | PlayerMarkAttendanceView | Player |
 | `/player/stats/` | `player_stats` | PlayerMyStatsView | Player |
 
-Total: **44 URL patterns**
+Total: **49 URL patterns** (44 internal + 5 live-league pages)
 
 ---
 
@@ -674,6 +809,43 @@ The container automatically runs `python manage.py migrate` on startup, so a fre
 - [x] Colour-coded badges (result: Win/Loss/Draw; attendance: present/absent/excused/late)
 - [x] Empty-state placeholders on all tables
 - [x] "No active season" alerts guiding the owner to create one
+
+### Live league integration
+- [x] Real Italian Volleyball League (SuperLega) data via TheSportsDB free API
+- [x] League overview, upcoming fixtures, results, standings, "our team" pages
+- [x] Live strip on the coach dashboard with our team's next match and recent form
+- [x] Computed standings (FIVB scoring), with our row highlighted
+- [x] File-based response cache (6-hour TTL) and request throttling
+- [x] Offline snapshot fallback so demos work even when the API is rate-limited
+- [x] `warm_league_cache` management command for manual refresh / snapshot regeneration
+
+### Demo data
+- [x] One-shot `seed_demo` management command (idempotent, supports `--reset`)
+- [x] Seeded: 1 owner, 2 coaches, 14 players (full SuperLega-style roster), 1 active season
+- [x] 23 played matches with set scores + 5 upcoming SuperLega Final fixtures vs Volley Lube
+- [x] 11 past + upcoming trainings, 322 attendance records, full per-match player statistics
+- [x] 3 transfers and 12 expense entries across multiple categories
+- [x] Dockerfile auto-runs `seed_demo` on container start
+
+---
+
+## 13. Seeding Demo Data
+
+A single management command sets up a complete demo state suitable for live presentation.
+
+```bash
+# First time (or after a reset)
+python manage.py migrate
+python manage.py seed_demo                 # idempotent — safe to re-run
+python manage.py warm_league_cache         # optional: pre-fill the API cache
+
+# Wipe & reseed the demo
+python manage.py seed_demo --reset
+```
+
+After running `seed_demo`, all credentials in [section 0](#0-demo-credentials) are valid.
+The Dockerfile already invokes `seed_demo` automatically when the container starts,
+so a fresh `docker run` lands you in a fully populated app.
 
 ---
 

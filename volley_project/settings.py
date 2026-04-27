@@ -55,6 +55,13 @@ DATABASES = {
     }
 }
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': BASE_DIR / '.cache' / 'league',
+    }
+}
+
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
@@ -73,3 +80,17 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/login/'
+
+# --------------------------------------------------------------------------
+# Live league integration (TheSportsDB free API)
+# Our team plays in the Italian Volleyball League (SuperLega).
+# --------------------------------------------------------------------------
+LEAGUE_API_KEY = '3'                                # free public key
+LEAGUE_ID = '4544'                                  # Italian Volleyball League
+LEAGUE_NAME = 'Italian Volleyball League (SuperLega)'
+LEAGUE_SEASON = '2025-2026'
+OUR_TEAM_ID = '136629'                              # Volley Perugia
+OUR_TEAM_NAME = 'Volley Perugia'
+LEAGUE_REGULAR_SEASON_ROUNDS = 22
+LEAGUE_API_TIMEOUT = 6                              # seconds
+

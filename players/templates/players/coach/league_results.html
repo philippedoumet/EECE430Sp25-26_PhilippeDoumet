@@ -1,0 +1,61 @@
+{% extends 'players/coach/base.html' %}
+{% block title %}League Results{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h3 class="fw-bold mb-1"><i class="fas fa-clipboard-check text-success me-2"></i>League Results</h3>
+    <small class="text-muted">{{ league_name }} · Season {{ league_season }}</small>
+  </div>
+  <div class="btn-group" role="group">
+    <a href="?" class="btn btn-sm {% if not only_ours %}btn-success{% else %}btn-outline-success{% endif %}">All teams</a>
+    <a href="?mine=1" class="btn btn-sm {% if only_ours %}btn-success{% else %}btn-outline-success{% endif %}"><i class="fas fa-shield-alt me-1"></i>{{ our_team_name }}</a>
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-header bg-white fw-semibold">{{ results|length }} match{{ results|length|pluralize:"es" }} played</div>
+  <div class="table-responsive">
+    <table class="table table-hover mb-0 align-middle">
+      <thead class="table-light">
+        <tr>
+          <th class="ps-3">Date</th>
+          <th>Home</th>
+          <th class="text-center">Score</th>
+          <th>Away</th>
+          <th>Round</th>
+          <th>Venue</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ev in results %}
+        <tr {% if ev.involves_us %}class="table-success"{% endif %}>
+          <td class="ps-3 small text-muted">{{ ev.date|date:"M d, Y" }}</td>
+          <td class="{% if ev.home == our_team_name %}fw-bold{% endif %} {% if ev.played and ev.winner == ev.home %}text-success{% endif %}">
+            {{ ev.home }}
+          </td>
+          <td class="text-center fw-bold">
+            <span class="{% if ev.played and ev.winner == ev.home %}text-success{% endif %}">{{ ev.home_score }}</span>
+            <span class="text-muted mx-1">–</span>
+            <span class="{% if ev.played and ev.winner == ev.away %}text-success{% endif %}">{{ ev.away_score }}</span>
+          </td>
+          <td class="{% if ev.away == our_team_name %}fw-bold{% endif %} {% if ev.played and ev.winner == ev.away %}text-success{% endif %}">
+            {{ ev.away }}
+          </td>
+          <td>{% if ev.round_label %}<span class="badge bg-light text-dark">{{ ev.round_label }}</span>{% endif %}</td>
+          <td class="small text-muted">{{ ev.venue|default:"—" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="text-center text-muted p-5">
+            <i class="fas fa-folder-open fa-2x mb-2 d-block opacity-50"></i>
+            No results yet for this season.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<p class="text-muted small mt-4 mb-0"><i class="fas fa-database me-1"></i>Data source: <a href="https://www.thesportsdb.com/" target="_blank" rel="noopener">TheSportsDB</a> · cached for 30 minutes</p>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends 'players/coach/base.html' %}
+{% block title %}League Standings{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h3 class="fw-bold mb-1"><i class="fas fa-list-ol text-success me-2"></i>League Standings</h3>
+    <small class="text-muted">{{ league_name }} · Season {{ league_season }} · regular-season points</small>
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0 align-middle">
+      <thead class="table-light">
+        <tr>
+          <th class="ps-3">#</th>
+          <th>Team</th>
+          <th class="text-center">P</th>
+          <th class="text-center">W</th>
+          <th class="text-center">L</th>
+          <th class="text-center">SW</th>
+          <th class="text-center">SL</th>
+          <th class="text-center">SD</th>
+          <th class="text-end pe-3">Pts</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in standings %}
+        <tr {% if r.is_ours %}class="table-success"{% endif %}>
+          <td class="ps-3 fw-semibold">{{ r.rank }}</td>
+          <td class="{% if r.is_ours %}fw-bold{% endif %}">
+            {% if r.is_ours %}<i class="fas fa-shield-alt text-success me-1"></i>{% endif %}
+            {{ r.team }}
+          </td>
+          <td class="text-center">{{ r.played }}</td>
+          <td class="text-center text-success">{{ r.wins }}</td>
+          <td class="text-center text-danger">{{ r.losses }}</td>
+          <td class="text-center">{{ r.sets_won }}</td>
+          <td class="text-center">{{ r.sets_lost }}</td>
+          <td class="text-center fw-semibold">{% if r.set_diff > 0 %}+{% endif %}{{ r.set_diff }}</td>
+          <td class="text-end pe-3 fw-bold fs-5">{{ r.points }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="9" class="text-center text-muted p-5">Standings unavailable.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="small text-muted mt-3">
+  <strong>Scoring:</strong> 3-0 / 3-1 win = 3 pts (loser 0); 3-2 win = 2 pts (loser 1).
+  Tie-breaks: points → set difference → wins → name.
+</div>
+<p class="text-muted small mt-2 mb-0"><i class="fas fa-database me-1"></i>Data source: <a href="https://www.thesportsdb.com/" target="_blank" rel="noopener">TheSportsDB</a></p>
+{% endblock %}
